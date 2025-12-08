@@ -19,26 +19,17 @@
 // 
 //////////////////////////////////////////////////////////////////////////////////
 
-// Max function
-function bit [$size(int)-1 : 0] max;
-    input int a, b;
-    if (a >= b)
-        return a;
-    else
-        return b;
-endfunction
-
 
 module BRAM
-#(datalength = 16, address_size = 4, output_num = 16)
+    #(datalength = 8, address_size = 4, input_num = 64, output_num = 1)
     (input logic CLK,
-     input logic [output_num-1 : 0][address_size-1 : 0] Address,
-     input logic [datalength-1 : 0] Element_In,
+     input logic  [output_num-1 : 0][address_size-1 : 0] Address,
+     input logic [input_num*datalength-1 : 0] Element_In,
      input logic WE, Enable,
-     output logic [output_num-1 : 0][datalength-1 : 0] Elements_Out
+     output logic [output_num-1 : 0][input_num*datalength-1 : 0] Elements_Out
     );
     
-    (* RAM_STYLE = "block" *) reg [datalength-1 : 0] mem [0 : (2**address_size)-1];
+    (* RAM_STYLE = "block" *) reg [input_num*datalength-1 : 0] mem [0 : (2**address_size)-1];
     
     always@(posedge CLK)
     begin

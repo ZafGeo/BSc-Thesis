@@ -22,7 +22,7 @@
 //typedef enum logic[2:0] {Idle, Collect_Inputs, Feed_Inputs, Catch_Outputs, Collect_Outputs, Output_Results} statetype;
 
 module Output_Buffer
-    #(parameter datalength = 16, array_dim = 4)
+    #(parameter datalength = 32, array_dim = 4)
     (input logic CLK, Reset,
      input logic [array_dim-1 : 0][datalength-1 : 0] Result_In,
      input logic [array_dim-1 : 0] Result_Valid_In,

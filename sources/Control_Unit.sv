@@ -30,11 +30,10 @@ module Control_Unit
      input logic change_mode,
      output statetype Mode_Out,
      output logic [datalength-1 : 0] Tile_A, Tile_B,
-     output logic[datalength-1 : 0] input_dim,
+     output logic[datalength-1 : 0] input_dim, tile_num,
      output logic Element_Valid_Out, Element_Out_last, acc_ready);
      
      statetype state, nextstate;
-     int tile_num;
      logic temp_enable;
      logic[datalength-1 : 0] temp_input_dim;
      logic[$clog2(array_dim)-1 : 0] temp_modulo;
@@ -165,9 +164,6 @@ module Control_Unit
         
      end
      
-     
-     //assign tile_num = input_dim**2 / (input_dim * array_dim)
-                                            // input_dim >> $clog2(array_dim)
      
      always_ff@(posedge CLK)
      begin

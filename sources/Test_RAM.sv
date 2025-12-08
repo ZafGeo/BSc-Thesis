@@ -21,7 +21,7 @@
 
 
 module Test_RAM
-    #(parameter datalength = 16, address_size = 6)
+    #(parameter datalength = 32, address_size = 6)
     (input logic CLK, Reset,
      input logic [datalength-1 : 0] Element_In,
      input logic Element_Valid_In, Element_last,

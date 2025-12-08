@@ -21,39 +21,39 @@
 
 
 module Sys_Array_test
-    #(parameter datalength = 16, array_dim = 16, address_size = 5)
+    #(parameter input_datalength = 8, output_datalength = 32, array_dim = 16, address_size = 5)
     (input logic CLK, Reset,
      input logic[7 : 0] Switches,
      output logic[7 : 0] LEDS
 //     output logic acc_ready
     );
     
-    wire [datalength-1 : 0] Element_ROM, Element_acc, Element_RAM;
+    wire [input_datalength-1 : 0] Element_ROM, Element_acc, Element_RAM;
     wire Element_V_ROM, Element_l_ROM, Element_V_acc, Element_l_acc, acc_ready_in;
     
-    Test_ROM #(datalength) ROM_component(.CLK(CLK), .Reset(Reset),
-                                                       .Element_Out(Element_ROM),
-                                                       .Element_Valid_Out(Element_V_ROM),
-                                                       .Element_last(Element_l_ROM));
+    Test_ROM #(input_datalength) ROM_component(.CLK(CLK), .Reset(Reset),
+                                               .Element_Out(Element_ROM),
+                                               .Element_Valid_Out(Element_V_ROM),
+                                               .Element_last(Element_l_ROM));
     
     
-    Accelerator #(datalength, array_dim, address_size) acc_component(.CLK(CLK), .Reset(Reset),
-                                                                     .Element_In(Element_ROM),
-                                                                     .Element_Valid_In(Element_V_ROM),
-                                                                     .Element_In_last(Element_l_ROM),
-                                                                     .host_ready(1'b1),
-                                                                     .Element_Out(Element_acc),
-                                                                     .Element_Valid_Out(Element_V_acc),
-                                                                     .Element_Out_last(Element_l_acc),
-                                                                     .acc_ready(acc_ready_in));
+    Accelerator #(input_datalength, output_datalength, array_dim, address_size) acc_component(.CLK(CLK), .Reset(Reset),
+                                                                                              .Element_In(Element_ROM),
+                                                                                              .Element_Valid_In(Element_V_ROM),
+                                                                                              .Element_In_last(Element_l_ROM),
+                                                                                              .host_ready(1'b1),
+                                                                                              .Element_Out(Element_acc),
+                                                                                              .Element_Valid_Out(Element_V_acc),
+                                                                                              .Element_Out_last(Element_l_acc),
+                                                                                              .acc_ready(acc_ready_in));
     
     
-    Test_RAM #(datalength, address_size) RAM_component(.CLK(CLK), .Reset(Reset),
-                                                       .Element_In(Element_acc),
-                                                       .Element_Valid_In(Element_V_acc),
-                                                       .Element_last(Element_l_acc),
-                                                       .Address(Switches),
-                                                       .Element_Out(Element_RAM));
+    Test_RAM #(output_datalength, address_size) RAM_component(.CLK(CLK), .Reset(Reset),
+                                                              .Element_In(Element_acc),
+                                                              .Element_Valid_In(Element_V_acc),
+                                                              .Element_last(Element_l_acc),
+                                                              .Address(Switches),
+                                                              .Element_Out(Element_RAM));
     
     
     assign LEDS = Element_RAM;
