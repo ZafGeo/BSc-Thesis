@@ -19,7 +19,7 @@
 // 
 //////////////////////////////////////////////////////////////////////////////////
 
-//typedef enum logic[2:0] {Idle, Collect_Inputs, Feed_Inputs, Catch_Outputs, Collect_Outputs, Output_Results} statetype;
+typedef enum logic[2:0] {Idle, Collect_Inputs, Feed_Inputs, Catch_Outputs, Collect_Outputs, Output_Results} statetype;
 
 module Address_Generator
     #(datalength = 16, array_dim = 16, address_size = 6)
@@ -114,7 +114,7 @@ module Address_Generator
                     run_index_A <= run_index_A + tile_num;
                     run_index_B <= run_index_B + tile_num;
                     
-                    if (run_column_index == tile_num)
+                    if (run_column_index == input_dim)
                         run_column_index <= 0;
                     else
                         run_column_index <= run_column_index + 1;
@@ -224,7 +224,7 @@ module Address_Generator
             
             Feed_Inputs: begin
                 
-                if (run_column_index == array_dim)
+                if (run_column_index == input_dim)
                     element_last = 1'b1;
                 
                 Enable_IBram_A = 1'b1;
