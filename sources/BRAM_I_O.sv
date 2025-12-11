@@ -82,15 +82,20 @@ module BRAM_I_O
     // output_dim > input_dim 
     else begin
         
+        logic reg_Valid_In = 1'b0;
+        
         always@(posedge CLK)
         begin
             
             if (Reset) begin
                 Elements_Out <= '0;
                 run_index <= 0;
+                reg_Valid_In <= 1'b0;
             end
             
             else begin
+                
+                reg_Valid_In <= Valid_In;
                 
                 for (int i = 0; i < input_dim; i++)
                     Elements_Out[run_index + i] <= Elements_In[i];
@@ -112,7 +117,7 @@ module BRAM_I_O
             
             Valid_Out <= 1'b0;
             
-            if (Valid_In && run_index == 0)
+            if (reg_Valid_In && run_index == 0)
                 Valid_Out <= 1'b1;
             
         end
