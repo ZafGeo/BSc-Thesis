@@ -21,7 +21,7 @@
 
 
 module BRAM_I_O_tb
-    #(datalength = 8, input_dim = 8, output_dim = 1)
+    #(datalength = 8, input_dim = 2, output_dim = 8)
     ();
 
     logic CLK_tb, Reset_tb;
@@ -50,17 +50,17 @@ module BRAM_I_O_tb
         initial
         begin
 
-            Reset_tb <= 1;
+            Reset_tb = 1;
             Elements_In_tb <= '0;
             Valid_In_tb <= 0;
             #20;
             
             for (int i = 0; i < 3; i++) begin
-                Reset_tb <= 0;
+                Reset_tb = 0;
                 for (int j = 0; j < input_dim; j++)
-                    Elements_In_tb[j] <= i * (j + 1);
+                    Elements_In_tb[j] <= i * input_dim + (j + 1);
                 Valid_In_tb <= 1;
-                #(20 * input_dim);
+                #(20 * input_dim / output_dim);
             end
 
             Valid_In_tb <= 0;
@@ -73,17 +73,17 @@ module BRAM_I_O_tb
         initial
         begin
 
-            Reset_tb <= 1;
+            Reset_tb = 1;
             Elements_In_tb <= '0;
             Valid_In_tb <= 0;
             #20;
             
-            for (int i = 0; i < 3; i++) begin
-                Reset_tb <= 0;
+            for (int i = 0; i < 3 * output_dim; i++) begin
+                Reset_tb = 0;
                 for (int j = 0; j < input_dim; j++)
-                    Elements_In_tb[j] <= i * (j + 1);
+                    Elements_In_tb[j] <= i * input_dim + (j + 1);
                 Valid_In_tb <= 1;
-                #(20 * output_dim);
+                #20;
             end
 
             Valid_In_tb <= 0;
