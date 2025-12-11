@@ -19,9 +19,10 @@
 // 
 //////////////////////////////////////////////////////////////////////////////////
 
+//typedef enum logic[2:0] {Idle, Collect_Inputs, Feed_Inputs, Catch_Outputs, Collect_Outputs, Output_Results} statetype;
 
 module Address_Generator_tb
-    #(datalength = 8, array_dim = 8, address_size = 6, input_dim = 16)
+    #(datalength = 8, array_dim = 8, address_size = 8, input_dim = 32)
     ();
     
     logic CLK_tb, Reset_tb;
@@ -40,7 +41,7 @@ module Address_Generator_tb
     
     Address_Generator #(datalength, array_dim, address_size) uut(CLK_tb, Reset_tb,
                                                                  Mode_In_tb,
-                                                                 input_dim_tb, tile_num_tb
+                                                                 input_dim_tb, tile_num_tb,
                                                                  Element_Valid_In_tb,
                                                                  Tile_A_tb, Tile_B_tb,
                                                                  host_ready_tb,
@@ -59,7 +60,7 @@ module Address_Generator_tb
     initial
     begin
         
-        Reset_tb <= 1;
+        Reset_tb = 1;
         Mode_In_tb <= Idle;
         input_dim_tb <= 0;
         tile_num_tb <= 0;
@@ -69,8 +70,10 @@ module Address_Generator_tb
         host_ready_tb <= 0;
         #20;
         
+        Reset_tb = 0;
+        #20;        
+        
         // Collect_Inputs
-        Reset_tb <= 0;
         Mode_In_tb <= Collect_Inputs;
         input_dim_tb <= input_dim;
         tile_num_tb <= tile_num;
@@ -78,7 +81,7 @@ module Address_Generator_tb
         #20;
         
         Element_Valid_In_tb <= 1;
-        #(2 * (input_dim_tb**2) * 20);
+        #(2 * (input_dim**2) * 20);
         
         Element_Valid_In_tb <= 0;
         
@@ -93,22 +96,24 @@ module Address_Generator_tb
                     
                 // Feed_Inputs
                 Mode_In_tb <= Feed_Inputs;
-                #(20 * (array_dim+1));
+                #(20 * (input_dim+1));
                 
                 // Catch_Outputs
                 Mode_In_tb <= Catch_Outputs;
                 Tile_A_tb <= i;
                 Tile_B_tb <= j;
-                #((2*array_dim) * 20);
+                #((3*array_dim + 1) * 20);
                 
                 // Collect_Outputs
                 Mode_In_tb <= Collect_Outputs;
-                #((array_dim/2 + 1) * 20);
+                #((array_dim + 1) * 20);
         
         end
         
+        Mode_In_tb <= Output_Results;
+        #(input_dim**2 * 20);
+        
         Mode_In_tb <= Idle;
-        #20;
         
     end
     
