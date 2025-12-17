@@ -21,7 +21,7 @@
 
 
 module BRAM_I_O_tb
-    #(datalength = 8, input_dim = 2, output_dim = 8)
+    #(datalength = 8, input_dim = 8, output_dim = 1)
     ();
 
     logic CLK_tb, Reset_tb;

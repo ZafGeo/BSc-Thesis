@@ -19,18 +19,19 @@
 // 
 //////////////////////////////////////////////////////////////////////////////////
 
+//typedef enum logic[2:0] {Idle, Collect_Inputs, Feed_Inputs, Catch_Outputs, Collect_Outputs, Output_Results} statetype;
 
 module PE_tb
-    #(parameter datalength = 32)
+    #(parameter input_datalength = 8, output_datalength = 32)
     ();
 
-    logic signed[datalength-1 : 0] A_In_tb, B_In_tb;
+    logic signed[output_datalength-1 : 0] A_In_tb, B_In_tb;
     logic CLK_tb, Reset_tb, Input_Valid_A_tb, Input_Valid_B_tb;
     statetype mode_tb;  
-    logic signed[datalength-1 : 0] A_Out_tb, B_Out_tb;
+    logic signed[output_datalength-1 : 0] A_Out_tb, B_Out_tb;
     logic Output_Valid_A_tb, Output_Valid_B_tb;
     
-    PE uut(CLK_tb, Reset_tb, A_In_tb, B_In_tb, mode_tb, Input_Valid_A_tb, Input_Valid_B_tb, A_Out_tb, B_Out_tb, Output_Valid_A_tb, Output_Valid_B_tb);
+    PE #(input_datalength, output_datalength) uut(CLK_tb, Reset_tb, A_In_tb, B_In_tb, mode_tb, Input_Valid_A_tb, Input_Valid_B_tb, A_Out_tb, B_Out_tb, Output_Valid_A_tb, Output_Valid_B_tb);
     
     // Clock Production
     always

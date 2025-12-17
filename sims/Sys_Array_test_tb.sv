@@ -21,7 +21,7 @@
 
 
 module Sys_Array_test_tb
-    #(parameter datalength = 16, array_dim = 4, address_size = 7)
+    #(parameter input_datalength = 8, output_datalength = 32, array_dim = 4, address_size = 6)
     ();
     
     logic CLK_tb , Reset_tb;
@@ -31,7 +31,7 @@ module Sys_Array_test_tb
     int res;
     logic[7 : 0] run_index = 0;
         
-    Sys_Array_test #(datalength, array_dim, address_size) uut(CLK_tb, Reset_tb, Switches_tb, LEDS_tb);
+    Sys_Array_test #(input_datalength, output_datalength, array_dim, address_size) uut(CLK_tb, Reset_tb, Switches_tb, LEDS_tb);
     
     // Clock Production
     always
