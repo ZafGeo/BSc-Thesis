@@ -19,7 +19,7 @@
 // 
 //////////////////////////////////////////////////////////////////////////////////
 
-typedef enum logic[2:0] {Idle, Collect_Inputs, Feed_Inputs, Catch_Outputs, Collect_Outputs, Output_Results} statetype;
+//typedef enum logic[2:0] {Idle, Collect_Inputs, Feed_Inputs, Catch_Outputs, Collect_Outputs, Output_Results} statetype;
 
 module Address_Generator
     #(datalength = 16, array_dim = 16, address_size = 6)
@@ -32,7 +32,7 @@ module Address_Generator
      output logic element_last,
      output logic [1 : 0][address_size-1 : 0] Address,
      output logic WE_IBram_A, WE_IBram_B, WE_OBram,
-     output logic Enable_IBram_A, Enable_IBram_B, Enable_OBRam
+     output logic Enable_IBram_A, Enable_IBram_B, Enable_OBram
     );
     
     logic [1 : 0][address_size-1 : 0] temp_Address = '0;
@@ -125,7 +125,7 @@ module Address_Generator
                 
                 Catch_Outputs:
                     
-                    if (run_column_index == 3*array_dim)
+                    if (run_column_index == 3*array_dim + 1)
                         run_column_index <= 0;
                     
                     else
@@ -187,8 +187,8 @@ module Address_Generator
     end
     
     // Output element index (BRAM Address) Calculation
-    always@(Tile_A, Tile_B, tile_num)
-        index_output = (Tile_A * tile_num) + Tile_B;
+    always@(Tile_A, Tile_B, input_dim)
+        index_output = (Tile_A * input_dim) + Tile_B; // array_dim * tile_num = input_dim
     
     // BRAM Control Signals (BRAM_Enable/Write) Toggle
     always_comb
@@ -200,7 +200,7 @@ module Address_Generator
         
         Enable_IBram_A = 1'b0;
         Enable_IBram_B = 1'b0;
-        Enable_OBRam = 1'b0;
+        Enable_OBram = 1'b0;
         
         element_last = 1'b0;
         
@@ -234,7 +234,7 @@ module Address_Generator
             
             Catch_Outputs:
             
-                if (run_column_index == 3*array_dim)
+                if (run_column_index == 3*array_dim + 1)
                     element_last = 1'b1;
                     
             Collect_Outputs: begin
@@ -243,7 +243,7 @@ module Address_Generator
                     element_last = 1'b1;
                     
                 WE_OBram = 1'b1;
-                Enable_OBRam = 1'b1;
+                Enable_OBram = 1'b1;
                 
             end
             
@@ -252,7 +252,7 @@ module Address_Generator
                 if (run_row_index == input_dim - 1 && run_column_index == input_dim - 1)
                     element_last = 1'b1;
                 
-                Enable_OBRam = 1'b1;
+                Enable_OBram = 1'b1;
             
             end
             

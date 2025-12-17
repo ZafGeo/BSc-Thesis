@@ -31,7 +31,7 @@ module Control_Unit
      output statetype Mode_Out,
      output logic [datalength-1 : 0] Tile_A, Tile_B,
      output logic[datalength-1 : 0] input_dim, tile_num,
-     output logic Element_Valid_Out, Element_Out_last, acc_ready);
+     output logic Element_Out_last, acc_ready);
      
      statetype state, nextstate;
      logic temp_enable;
@@ -70,7 +70,6 @@ module Control_Unit
      always_comb
      begin
         
-        Element_Valid_Out = 0;
         Element_Out_last = 0;
         acc_ready = 0;
         
@@ -131,8 +130,6 @@ module Control_Unit
             end
             
             Output_Results: begin
-                
-                Element_Valid_Out = 1;
                 
                 if (change_mode) begin
                     nextstate = Idle;

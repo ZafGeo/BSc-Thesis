@@ -27,10 +27,10 @@ module Output_Buffer
      input logic [array_dim-1 : 0][datalength-1 : 0] Result_In,
      input logic [array_dim-1 : 0] Result_Valid_In,
      input statetype Mode_In,
-     output logic [datalength-1 : 0] Result_Out);
+     output logic [array_dim-1 : 0][datalength-1 : 0] Result_Out);
     
     logic [array_dim-1 : 0][array_dim-1 : 0][datalength-1 : 0] mem;
-    int run_i = 0, run_j = 0;
+    int run_i = 0;
     
     always_ff@(posedge CLK)
     begin
@@ -39,7 +39,6 @@ module Output_Buffer
             mem <= '0;
             Result_Out <= '0;
             run_i <= 0;
-            run_j <= 0;
         end
             
         else begin
@@ -62,21 +61,17 @@ module Output_Buffer
                     end
                     
                     run_i <= 0;
-                    run_j <= 0;
                     
                 end
                 
                 Collect_Outputs: begin
                     
-                    Result_Out <= mem[run_i][run_j];
+                    Result_Out <= mem[run_i];
                     
-                    if (run_j == array_dim - 1) begin
-                        run_j <= 0;
-                        run_i <= run_i + 1;
-                    end
-                    
+                    if (run_i == array_dim - 1)
+                        run_i <= 0;
                     else
-                        run_j <= run_j + 1;
+                        run_i <= run_i + 1;
                     
                 end
                 
