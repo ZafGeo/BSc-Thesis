@@ -122,14 +122,6 @@ module Address_Generator
                     run_index_output <= index_output;
                     
                 end
-                
-                Catch_Outputs:
-                    
-                    if (run_column_index == 3*array_dim + 1)
-                        run_column_index <= 0;
-                    
-                    else
-                        run_column_index <= run_column_index + 1;
                     
                 Collect_Outputs: begin
                 
@@ -232,11 +224,7 @@ module Address_Generator
                 
             end
             
-            Catch_Outputs:
             
-                if (run_column_index == 3*array_dim + 1)
-                    element_last = 1'b1;
-                    
             Collect_Outputs: begin
                 
                 if (run_row_index == array_dim)

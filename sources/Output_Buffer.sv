@@ -27,10 +27,12 @@ module Output_Buffer
      input logic [array_dim-1 : 0][datalength-1 : 0] Result_In,
      input logic [array_dim-1 : 0] Result_Valid_In,
      input statetype Mode_In,
-     output logic [array_dim-1 : 0][datalength-1 : 0] Result_Out);
+     output logic [array_dim-1 : 0][datalength-1 : 0] Result_Out,
+     output logic element_last);
     
-    logic [array_dim-1 : 0][array_dim-1 : 0][datalength-1 : 0] mem;
+    logic [array_dim-1 : 0][array_dim : 0][datalength-1 : 0] mem;
     int run_i = 0;
+    logic temp_flag;
     
     always_ff@(posedge CLK)
     begin
@@ -47,7 +49,12 @@ module Output_Buffer
                 
                 Catch_Outputs: begin
                     
-                    if (Result_Valid_In[0] == 1'b0 && Result_Valid_In[array_dim-1] == 1'b0) begin
+                    if (temp_flag) begin
+                        
+                        if (run_i == array_dim-1)
+                            run_i <= 0;
+                        else
+                            run_i <= run_i + 1;
                         
                         for (int i = 0; i < array_dim; i++) begin
                         
@@ -60,15 +67,13 @@ module Output_Buffer
                         
                     end
                     
-                    run_i <= 0;
-                    
                 end
                 
                 Collect_Outputs: begin
                     
                     Result_Out <= mem[run_i];
                     
-                    if (run_i == array_dim - 1)
+                    if (run_i == array_dim)
                         run_i <= 0;
                     else
                         run_i <= run_i + 1;
@@ -81,4 +86,25 @@ module Output_Buffer
     
     end
     
+    
+    always_ff@(posedge CLK)
+    
+        if (Reset)
+            temp_flag <= 1'b0;
+        
+        else
+            if (!Result_Valid_In[array_dim-2] && Result_Valid_In[array_dim-1])
+                temp_flag <= 1'b1;
+            else if (Mode_In != Catch_Outputs)
+                temp_flag <= 1'b0;
+    
+    
+    always_comb
+        
+        if (run_i == array_dim-1 && temp_flag)
+            element_last = 1'b1;
+        else
+            element_last = 1'b0;
+    
+            
 endmodule

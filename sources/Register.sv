@@ -26,7 +26,7 @@ module Register
      input logic [datalength-1 : 0] d,
      output logic [datalength-1 : 0] q);
      
-     always_ff@(posedge CLK, posedge Reset)
+     always_ff@(posedge CLK)
         if (Reset) q <= '0;
         else if (WE) q <= d;
 endmodule

@@ -26,7 +26,7 @@ module statetype_register
      input statetype d,
      output statetype q);
      
-     always_ff@(posedge CLK, posedge Reset)
+     always_ff@(posedge CLK)
         if (Reset) q <= Idle;
         else if (WE) q <= d;
 endmodule

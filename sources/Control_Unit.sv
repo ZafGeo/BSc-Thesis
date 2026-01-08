@@ -41,7 +41,7 @@ module Control_Unit
      
      assign Mode_Out = Reset ? Idle : state;
      
-     always_ff@(posedge CLK, posedge Reset)
+     always_ff@(posedge CLK)
      begin
      
         if (Reset) begin

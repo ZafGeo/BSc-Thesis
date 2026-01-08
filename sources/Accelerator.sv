@@ -33,7 +33,7 @@ module Accelerator
     statetype mode_CU, mode_reg_1, mode_reg_2;
     wire Element_l_CU, Element_l_reg_1, Element_l_reg_2;
     wire [input_datalength-1 : 0] tile_A, tile_B, input_dim_in, tile_num_in;
-    wire last_AG, acc_ready_in;
+    wire last_AG, last_OB,  acc_ready_in;
     wire [1 : 0][address_size-1 : 0] address_AG, address_reg;
     wire WE_IB_A_in, WE_IB_B_in, WE_OB_in;
     wire Enable_IBram_A_in, Enable_IBram_B_in, Enable_OBram_in;
@@ -56,7 +56,7 @@ module Accelerator
                                                                            .Element_In(Element_In),
                                                                            .Element_Valid_In(Element_Valid_In),
                                                                            .Element_last(Element_In_last),
-                                                                           .change_mode(last_AG),
+                                                                           .change_mode(last_AG || last_OB),
                                                                            .Mode_Out(mode_CU),
                                                                            .Tile_A(tile_A), .Tile_B(tile_B),
                                                                            .input_dim(input_dim_in),
@@ -216,7 +216,8 @@ module Accelerator
                                                         .Result_In(res_SA),
                                                         .Result_Valid_In(valid_SA),
                                                         .Mode_In(mode_CU),
-                                                        .Result_Out(res_OBuf));
+                                                        .Result_Out(res_OBuf),
+                                                        .element_last(last_OB));
     //
     
     
