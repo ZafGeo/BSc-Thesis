@@ -22,7 +22,7 @@
 //typedef enum logic[2:0] {Idle, Collect_Inputs, Feed_Inputs, Catch_Outputs, Collect_Outputs, Output_Results} statetype;
 
 module PE
-    #(parameter input_datalength = 8, output_datalength = 32) 
+    #(parameter output_datalength = 32) 
     (input logic CLK, Reset,
      input logic signed[output_datalength-1 : 0] A_In, B_In,
      input statetype Mode_In,
@@ -34,6 +34,7 @@ module PE
     logic signed[output_datalength-1 : 0] temp_result_Out;   // PE Output Register output
     
     assign temp_result_In = temp_result_Out;
+    
     
     // PE Output Register.
     always_ff@(posedge CLK)
@@ -54,32 +55,23 @@ module PE
             Output_Valid_B <= Input_Valid_B;
             
             
-            if (Mode_In == Feed_Inputs) begin
-                
-                if (Input_Valid_A) begin
-                    temp_result_Out <= temp_result_In + (A_In[input_datalength-1 : 0] * B_In[input_datalength-1 : 0]);
-                    A_Out <= A_In;
-                    B_Out <= B_In;
-                end
-                
-                else begin
-                    A_Out <= temp_result_Out;
-                    B_Out <= temp_result_Out;
-                end
-                
+            if (Mode_In == Catch_Outputs) begin
+                temp_result_Out <= '0;
+                A_Out <= A_In;
+//                B_Out <= B_In;
             end
             
-            else if (Mode_In == Catch_Outputs) begin
+            else if (Input_Valid_A) begin
+                temp_result_Out <= temp_result_In + (A_In[9 : 0] * B_In[9 : 0]);
                 A_Out <= A_In;
                 B_Out <= B_In;
             end
             
             else begin
-                temp_result_Out <= '0;
-                A_Out <= '0;
-                B_Out <= '0;
+                A_Out <= temp_result_Out;
+//                B_Out <= temp_result_Out;
             end
-            
+                
         end
         
 endmodule

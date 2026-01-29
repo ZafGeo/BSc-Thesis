@@ -28,14 +28,14 @@ module Control_Unit
      input logic Element_Valid_In,
      input logic Element_last,
      input logic change_mode,
+     input logic unsigned [datalength-1 : 0] tile_num,
      output statetype Mode_Out,
-     output logic [datalength-1 : 0] Tile_A, Tile_B,
-     output logic[datalength-1 : 0] input_dim, tile_num,
+     output logic unsigned [datalength-1 : 0] Tile_A, Tile_B,
+     output logic unsigned [datalength-1 : 0] input_dim,
      output logic Element_Out_last, acc_ready);
      
      statetype state, nextstate;
      logic temp_enable;
-     logic[datalength-1 : 0] temp_input_dim;
      logic[$clog2(array_dim)-1 : 0] temp_modulo;
      logic[datalength-1 : 0] run_Tile_A, run_Tile_B;
      
@@ -47,17 +47,14 @@ module Control_Unit
         if (Reset) begin
             state <= Idle;
             input_dim <= 0;
-            temp_input_dim <= 0;
         end
         
         else begin
             
             if (state == Idle) begin
             
-                if (Element_Valid_In) begin
-                    temp_input_dim <= Element_In;
+                if (Element_Valid_In) 
                     input_dim <= Element_In;
-                end
                 
             end
             
@@ -145,20 +142,6 @@ module Control_Unit
                 nextstate = Idle;
             
         endcase
-     end
-     
-     
-     // Tile calculation
-     always_comb
-     begin
-        
-        temp_modulo = temp_input_dim[$clog2(array_dim)-1 : 0];
-        
-        if (temp_modulo == '0)
-            tile_num = temp_input_dim >> $clog2(array_dim);
-        else
-            tile_num = (temp_input_dim >> $clog2(array_dim)) + 1;
-        
      end
      
      

@@ -25,22 +25,23 @@ module Address_Generator
     #(datalength = 16, array_dim = 16, address_size = 6)
     (input logic CLK, Reset,
      input statetype Mode_In,
-     input logic [datalength-1 : 0] input_dim, tile_num,
+     input logic unsigned [datalength-1 : 0] input_dim,
      input logic Element_Valid_In,
-     input logic [datalength-1 : 0] Tile_A, Tile_B,
+     input logic unsigned [datalength-1 : 0] Tile_A, Tile_B,
      input logic host_ready,
      output logic element_last,
      output logic [1 : 0][address_size-1 : 0] Address,
-     output logic WE_IBram_A, WE_IBram_B, WE_OBram,
-     output logic Enable_IBram_A, Enable_IBram_B, Enable_OBram
+     output logic WE_IBram, WE_OBram,
+     output logic Enable_IBram, Enable_OBram,
+     output logic unsigned [datalength-1 : 0] tile_num
     );
     
     logic [1 : 0][address_size-1 : 0] temp_Address = '0;
     int run_row_index = 0, run_column_index = 0;
-    logic BRAM_A_B = 0;
     int index_output = 0;
     int run_index_A = 0, run_index_B = 0, run_index_output = 0;
-    int BRAM_I_counter = 0;
+    int BRAM_I_counter = 0, index_B = 0;
+    int temp_tile_num = 0;
     
     
     assign Address = Reset ? '0 : temp_Address;
@@ -52,11 +53,11 @@ module Address_Generator
             temp_Address <= '0;
             run_row_index <= 0;
             run_column_index <= 0;
-            BRAM_A_B <= 0;
             run_index_A <= 0;
             run_index_B <= 0;
             run_index_output <= 0;
             BRAM_I_counter <= 0;
+            temp_tile_num <= 0;
         end
         
         else begin
@@ -67,41 +68,31 @@ module Address_Generator
                     temp_Address <= '0;
                     run_index_A <= 0;
                     run_index_B <= 0;
-                    BRAM_A_B <= 0;
+                    BRAM_I_counter <= 1;
+                    temp_tile_num <= 1;
                 end
                 
                 Collect_Inputs: begin
                     
                     if (Element_Valid_In) begin
                         
-                        if (BRAM_I_counter == array_dim - 1) begin
-                            BRAM_I_counter <= 0;
-                            temp_Address[0] <= temp_Address[0] + 1;
-                            temp_Address[1] <= temp_Address[1] + 1;
-                        end
-                        
-                        else
-                            BRAM_I_counter <= BRAM_I_counter + 1;
-                        
-                        if (run_column_index == input_dim - 1) begin
-                            
+                        if (run_column_index == array_dim - 1) begin
                             run_column_index <= 0;
-                            
-                            if (run_row_index == input_dim - 1) begin
-                                run_row_index <= 0;
-                                temp_Address[0] <= 0;
-                                temp_Address[1] <= 0;
-                                BRAM_A_B <= 1;
-                            end
-                            
-                            else
-                                run_row_index <= run_row_index + 1;
-                            
+                            BRAM_I_counter <= BRAM_I_counter + 1;
+                            temp_Address[0] <= temp_Address[0] + 1;
                         end
                         
                         else
                             run_column_index <= run_column_index + 1;
-                    
+                        
+                        if (run_row_index == input_dim-1) begin
+                            temp_tile_num <= temp_tile_num + 1;
+                            run_row_index <= 0;
+                        end
+                        
+                        else
+                            run_row_index <= run_row_index + 1;
+                        
                     end
 
                 end
@@ -109,7 +100,7 @@ module Address_Generator
                 Feed_Inputs: begin
                     
                     temp_Address[0] <= run_index_A;
-                    temp_Address[1] <= run_index_B;
+                    temp_Address[1] <= run_index_B + index_B;
                     
                     run_index_A <= run_index_A + tile_num;
                     run_index_B <= run_index_B + tile_num;
@@ -120,6 +111,7 @@ module Address_Generator
                         run_column_index <= run_column_index + 1;
                     
                     run_index_output <= index_output;
+                    BRAM_I_counter <= 0;
                     
                 end
                     
@@ -178,20 +170,37 @@ module Address_Generator
         
     end
     
+    
     // Output element index (BRAM Address) Calculation
     always@(Tile_A, Tile_B, input_dim)
         index_output = (Tile_A * input_dim) + Tile_B; // array_dim * tile_num = input_dim
+        
+    
+    always_ff@(posedge CLK)
+        if (Reset)
+            index_B <= 0;
+        else
+            if (Mode_In == Collect_Inputs) begin
+                index_B <= BRAM_I_counter >> 1;
+            end
+    
+    
+    // Tile calculation
+    always_ff@(posedge CLK)
+    if (Reset)
+        tile_num <= 0;
+    else
+        tile_num <= temp_tile_num >> (1 + $clog2(array_dim));  
+    
     
     // BRAM Control Signals (BRAM_Enable/Write) Toggle
     always_comb
     begin
         
-        WE_IBram_A = 1'b0;
-        WE_IBram_B = 1'b0;
+        WE_IBram = 1'b0;
         WE_OBram = 1'b0;
         
-        Enable_IBram_A = 1'b0;
-        Enable_IBram_B = 1'b0;
+        Enable_IBram = 1'b0;
         Enable_OBram = 1'b0;
         
         element_last = 1'b0;
@@ -200,17 +209,10 @@ module Address_Generator
             
             Collect_Inputs: begin
                 
-                if (Element_Valid_In)
-                
-                    if (BRAM_A_B) begin
-                        WE_IBram_B = 1'b1;
-                        Enable_IBram_B = 1'b1;
-                    end
-                    
-                    else begin
-                        WE_IBram_A = 1'b1;
-                        Enable_IBram_A = 1'b1;
-                    end
+                if (Element_Valid_In) begin
+                    WE_IBram = 1'b1;
+                    Enable_IBram = 1'b1;
+                end
                     
             end
             
@@ -219,8 +221,7 @@ module Address_Generator
                 if (run_column_index == input_dim)
                     element_last = 1'b1;
                 
-                Enable_IBram_A = 1'b1;
-                Enable_IBram_B = 1'b1;
+                Enable_IBram = 1'b1;
                 
             end
             

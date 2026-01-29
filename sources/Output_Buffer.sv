@@ -22,15 +22,15 @@
 //typedef enum logic[2:0] {Idle, Collect_Inputs, Feed_Inputs, Catch_Outputs, Collect_Outputs, Output_Results} statetype;
 
 module Output_Buffer
-    #(parameter datalength = 32, array_dim = 4)
+    #(parameter datalength = 32, array_dim = 16)
     (input logic CLK, Reset,
      input logic [array_dim-1 : 0][datalength-1 : 0] Result_In,
-     input logic [array_dim-1 : 0] Result_Valid_In,
+     input logic [array_dim-1 : array_dim-2] Result_Valid_In,
      input statetype Mode_In,
      output logic [array_dim-1 : 0][datalength-1 : 0] Result_Out,
      output logic element_last);
     
-    logic [array_dim-1 : 0][array_dim : 0][datalength-1 : 0] mem;
+    logic [array_dim-1 : 0][array_dim-1 : 0][datalength-1 : 0] mem;
     int run_i = 0;
     logic temp_flag;
     

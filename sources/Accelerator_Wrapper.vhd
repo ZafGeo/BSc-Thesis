@@ -35,7 +35,7 @@ entity Accelerator_Wrapper is
     Generic(input_datalength : integer := 8;
             output_datalength : integer := 32;
             array_dim : integer := 16;
-            address_size : integer := 6);
+            address_size : integer := 13);
     Port(
         s_axis_h2a_aclk, s_axis_h2a_aresetn : in std_logic;
         s_axis_h2a_tdata : in std_logic_vector(31 downto 0);
@@ -47,7 +47,11 @@ end Accelerator_Wrapper;
 
 architecture Behavioral of Accelerator_Wrapper is
 
+signal real_reset: std_logic;
+
 begin
+
+    real_reset <= not s_axis_h2a_aresetn;
 
     Acc_Inst: Accelerator
     Generic map(input_datalength => input_datalength,
@@ -55,7 +59,7 @@ begin
                 array_dim => array_dim,
                 address_size => address_size)
     Port map(CLK => s_axis_h2a_aclk,
-             Reset => s_axis_h2a_aresetn,
+             Reset => real_reset,
              Element_In => s_axis_h2a_tdata(input_datalength-1 downto 0),
              Element_Valid_In => s_axis_h2a_tvalid,
              Element_In_last => s_axis_h2a_tlast,
