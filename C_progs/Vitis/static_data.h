@@ -1,11 +1,11 @@
-#define ARRAY_DIMENSION 64
+#define ARRAY_DIMENSION 8
 #define ARRAY_SIZE ARRAY_DIMENSION*ARRAY_DIMENSION
 typedef signed char input_d;
 
-input_d input_data[ARRAY_SIZE+1] =
+input_d input_data[2*ARRAY_SIZE+1] =
 {
 		// Array dimension
-		ARRAY_DIMENSION,
+		8,
 		// Matrix A
 		8, 5, 5, 7, 3, 9, 4, 4,
 		6, 5, 6, 6, 2, 6, 0, 7,
