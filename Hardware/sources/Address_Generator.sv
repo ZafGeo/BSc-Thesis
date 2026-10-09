@@ -1,0 +1,276 @@
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: 
+// 
+// Create Date: 09/02/2025 02:51:36 PM
+// Design Name: 
+// Module Name: Address_Generator
+// Project Name: 
+// Target Devices: 
+// Tool Versions: 
+// Description: 
+// 
+// Dependencies: 
+// 
+// Revision:
+// Revision 0.01 - File Created
+// Additional Comments:
+// 
+//////////////////////////////////////////////////////////////////////////////////
+
+//typedef enum logic[2:0] {Idle, Collect_Inputs, Feed_Inputs, Catch_Outputs, Collect_Outputs, Feed_Outputs, Output_Results} statetype;
+
+module Address_Generator
+    #(array_dim = 16, address_size = 6, elements_per_cycle = 4)
+    (input logic CLK, Reset,
+     input statetype Mode_In,
+     input logic unsigned [address_size+array_dim : 0] input_dim,
+     input logic Element_Valid_In,
+     input logic unsigned [address_size : 0] Tile_A, Tile_B,
+     input logic host_ready,
+     output logic element_last,
+     output logic [1 : 0][address_size-1 : 0] Address,
+     output logic WE_IBram, WE_OBram,
+     output logic Enable_IBram, Enable_OBram, Valid_OBram_I_O,
+     output logic unsigned [address_size : 0] tile_num
+    );
+    
+    int run_row_index = 0, run_column_index = 0;
+    int run_index_A = 0, run_index_B = 0, run_index_output = 0;
+    int BRAM_I_counter = 0, index_B = 0;
+    int no_rows = 0;
+    (* use_dsp = "yes" *) int unsigned index_output;
+    
+    
+    always_ff@(posedge CLK)
+    begin
+    
+        if (!Reset) begin
+            Address <= '0;
+            run_row_index <= 0;
+            run_column_index <= 0;
+            run_index_A <= 0;
+            run_index_B <= 0;
+            run_index_output <= 0;
+            BRAM_I_counter <= 0;
+            no_rows <= 0;
+        end
+        
+        else begin
+            
+            case (Mode_In)
+                
+                Idle: begin
+                    Address <= '0;
+                    run_index_A <= 0;
+                    run_index_B <= 0;
+                    BRAM_I_counter <= elements_per_cycle;
+                    no_rows <= 0;
+                    run_index_output <= 0;
+                end
+                
+                Collect_Inputs: begin
+                    
+                    if (Element_Valid_In) begin
+                        
+                        if (run_column_index == array_dim/elements_per_cycle - 1) begin
+                            run_column_index <= 0;
+                            Address[0] <= Address[0] + 1;
+                        end
+                        
+                        else
+                            run_column_index <= run_column_index + 1;
+                            
+                        BRAM_I_counter <= BRAM_I_counter + elements_per_cycle;
+                        
+                        if (run_row_index == input_dim - 1) begin
+                            no_rows <= no_rows + 1;
+                            run_row_index <= 0;
+                        end
+                        
+                        else
+                            run_row_index <= run_row_index + 1;
+                        
+                    end
+
+                end
+                
+                Feed_Inputs: begin
+                    
+                    Address[0] <= run_index_A;
+                    Address[1] <= run_index_B + index_B;
+                    
+                    run_index_A <= run_index_A + tile_num;
+                    run_index_B <= run_index_B + tile_num;
+                    
+                    if (run_column_index == input_dim)
+                        run_column_index <= 0;
+                    else
+                        run_column_index <= run_column_index + 1;
+                    
+                    run_index_output <= index_output;
+                    BRAM_I_counter <= 0;
+                    run_row_index <= 0;
+                    
+                end
+                    
+                Collect_Outputs: begin
+                
+                    Address[0] <= run_index_output;
+                    
+                    run_index_output <= run_index_output + tile_num;
+
+                    if (run_row_index == array_dim) begin
+                        run_row_index <= 0;
+                        Address[0] <= '0;
+                        run_index_output <= index_output;
+                    end
+                    
+                    else
+                        run_row_index <= run_row_index + 1;
+
+                    run_index_A <= Tile_A;
+                    run_index_B <= Tile_B;
+                        
+                end
+                
+                Feed_Outputs: begin
+                    
+                    Address[0] <= run_index_output;
+                    
+                    run_index_output <= run_index_output + tile_num;
+                    
+                    if (run_row_index == array_dim-1)
+                        run_row_index <= 0;
+                    else
+                        run_row_index <= run_row_index + 1;
+                        
+                end
+                
+                Output_Results: begin
+                    
+                    if (host_ready) begin
+                        
+                        if (BRAM_I_counter == array_dim - 1) begin
+                            BRAM_I_counter <= 0;
+                            Address[0] <= Address[0] + 1;
+                        end
+
+                        else
+                            BRAM_I_counter <= BRAM_I_counter + 1;
+
+                        if (run_column_index == input_dim - 1) begin
+                            
+                            run_column_index <= 0;
+                            
+                            if (run_row_index == (no_rows << ($clog2(elements_per_cycle) - 1)) - 1)
+                                run_row_index <= 0;
+                            else
+                                run_row_index <= run_row_index + 1;
+                            
+                        end
+                        
+                        else
+                            run_column_index <= run_column_index + 1;
+                    
+                    end
+                    
+                end
+                
+            endcase
+            
+        end
+        
+    end
+    
+    
+    // Output element index (BRAM Address) Calculation (DSP inferred)
+    always_ff@(posedge CLK)
+        if (!Reset)
+            index_output <= '0;
+        else
+            index_output <= Tile_A * input_dim + Tile_B; // array_dim * tile_num = input_dim
+        
+    
+    // Calculation of the address of the inputs BRAM where the second matrix starts.
+    always_ff@(posedge CLK)
+        if (!Reset)
+            index_B <= 0;
+        else
+            if (Mode_In == Collect_Inputs) begin
+                index_B <= BRAM_I_counter >> (1 + $clog2(array_dim));
+            end
+    
+    
+    // Tile calculation
+    assign tile_num = no_rows >> (1 + $clog2(array_dim) - $clog2(elements_per_cycle));
+    
+    
+    // BRAM Control Signals (BRAM_Enable/Write) Toggle
+    always_comb
+    begin
+        
+        WE_IBram = 1'b0;
+        WE_OBram = 1'b0;
+        
+        Enable_IBram = 1'b0;
+        Enable_OBram = 1'b0;
+        Valid_OBram_I_O = 1'b0;
+        
+        element_last = 1'b0;
+        
+        case (Mode_In)
+            
+            Collect_Inputs: begin
+                
+                if (Element_Valid_In) begin
+                    WE_IBram = 1'b1;
+                    Enable_IBram = 1'b1;
+                end
+                    
+            end
+            
+            Feed_Inputs: begin
+                
+                if (run_column_index == input_dim)
+                    element_last = 1'b1;
+                
+                Enable_IBram = 1'b1;
+                
+            end
+            
+            Collect_Outputs: begin
+                
+                if (run_row_index == array_dim)
+                    element_last = 1'b1;
+                    
+                WE_OBram = 1'b1;
+                Enable_OBram = 1'b1;
+                
+            end
+            
+            Feed_Outputs: begin
+            
+                if (run_row_index == array_dim-1)
+                    element_last = 1'b1;
+                    
+                Enable_OBram = 1'b1;
+                
+            end
+            
+            Output_Results: begin
+            
+                if (run_row_index == (no_rows << ($clog2(elements_per_cycle) - 1)) - 1 && run_column_index == input_dim - 1)
+                    element_last = 1'b1;
+                
+                Enable_OBram = 1'b1;
+                Valid_OBram_I_O = 1'b1;
+            
+            end
+            
+        endcase
+        
+    end
+    
+endmodule
