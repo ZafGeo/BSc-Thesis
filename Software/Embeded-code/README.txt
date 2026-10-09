@@ -1,0 +1,1 @@
+This folder contains the software code files needed to produce the .elf executable that runs on the FPGA, in the Vitis suite. The hello_world.c file contains the main function that produced the test results.
