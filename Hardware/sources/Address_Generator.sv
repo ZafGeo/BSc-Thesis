@@ -261,7 +261,7 @@ module Address_Generator
             
             Output_Results: begin
             
-                if (run_row_index == (no_rows << ($clog2(elements_per_cycle) - 1)) - 1 && run_column_index == input_dim - 1)
+                if (run_row_index == (no_rows << ($clog2(elements_per_cycle) - 1)) - 1 && run_column_index == input_dim - 1 && host_ready)
                     element_last = 1'b1;
                 
                 Enable_OBram = 1'b1;
