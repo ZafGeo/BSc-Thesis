@@ -130,15 +130,23 @@ int Accelerate(XAxiDma* dma_inst, TileData* tile_data, s8* A, s8* B, s32* C, cha
     // Determine if the input sub-matrices need zero-padding
     if (m != tile_data->max_tile_dim_size || k!= tile_data->max_tile_dim_size || n != tile_data->max_tile_dim_size)
     {
+
+		int og_k = k;
+		
+		int new_size;
+		if (tile_data->no_sub_tiles)
+			new_size = tile_data->max_tile_dim_size;
+		else
+			new_size = MAX(og_m, og_k, og_n);
         
         // Zero-pad the input matrices
-        A = resize_input(A, &k, &m, MAX(m, k, n), SYSTOLIC_ARRAY_DIMENSION);
+        A = resize_input(A, &k, &m, new_size, SYSTOLIC_ARRAY_DIMENSION);
         if (!A) {
             free(setup_packet);
             return 1;
         }
         
-        B = resize_input(B, &k, &n, MAX(m, k, n), SYSTOLIC_ARRAY_DIMENSION);
+        B = resize_input(B, &og_k, &n, new_size, SYSTOLIC_ARRAY_DIMENSION);
         if (!B) {
             free(setup_packet);
             free(A);
