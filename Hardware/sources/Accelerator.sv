@@ -230,7 +230,7 @@ module Accelerator
    
    // Accelerator output signals                                                           
    assign Element_Out = res_OBram_I_O;
-   assign Element_Valid_Out = valid_I_O_O_In_reg_1 && host_ready;
+   assign Element_Valid_Out = valid_I_O_O_In_reg_1;
    assign Element_Out_last = Element_l_reg_1 && host_ready; 
    assign acc_ready = acc_ready_in;
    //
