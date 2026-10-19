@@ -30,7 +30,7 @@ module Sys_Array_test
     
     wire [31 : 0] Element_ROM;
     wire [output_datalength-1 : 0] Element_acc, Element_RAM;
-    wire Element_V_ROM, Element_l_ROM, Element_V_acc, Element_l_acc, acc_ready_in;
+    wire Element_V_ROM, Element_l_ROM, Element_V_acc, Element_l_acc, acc_ready_in, host_ready_in;
     
     Test_ROM #(8) ROM_component(.CLK(CLK), .Reset(mem_Reset),
                                                .Element_Out(Element_ROM),
@@ -42,7 +42,7 @@ module Sys_Array_test
                                                                                               .Element_In(Element_ROM),
                                                                                               .Element_Valid_In(Element_V_ROM),
                                                                                               .Element_In_last(Element_l_ROM),
-                                                                                              .host_ready(1'b1),
+                                                                                              .host_ready(host_ready_in),
                                                                                               .Element_Out(Element_acc),
                                                                                               .Element_Valid_Out(Element_V_acc),
                                                                                               .Element_Out_last(Element_l_acc),
@@ -54,7 +54,8 @@ module Sys_Array_test
                                                               .Element_Valid_In(Element_V_acc),
                                                               .Element_last(Element_l_acc),
                                                               .Address(Switches),
-                                                              .Element_Out(Element_RAM));
+                                                              .Element_Out(Element_RAM),
+                                                              .ready(host_ready_in));
     
     
     assign LEDS = Element_RAM;

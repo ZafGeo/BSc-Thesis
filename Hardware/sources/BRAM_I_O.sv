@@ -37,7 +37,7 @@ module BRAM_I_O
     #(datalength = 8, input_dim = 1, output_dim = 1)
     (input logic CLK, Reset,
      input logic [input_dim-1 : 0][datalength-1 : 0] Elements_In,
-     input logic Enable, Valid_In,
+     input logic Valid_In,
      output logic [output_dim-1 : 0][datalength-1 : 0] Elements_Out,
      output logic Valid_Out
     );
@@ -47,35 +47,34 @@ module BRAM_I_O
     // input_dim > output_dim
     if (max(input_dim, output_dim)) begin
         
-        for (genvar i = 0; i < output_dim; i++)
-            assign Elements_Out[i] = Elements_In[run_index + i];
-        
         always@(posedge CLK)
         begin
             
             if (!Reset) begin
+                Elements_Out <= '0;
                 run_index <= 0;
                 Valid_Out <= 1'b0;
             end
             
-            else if (Enable) begin
+            else if (Valid_In) begin
+            
+                for (int i = 0; i < output_dim; i++)
+                    Elements_Out[i] <= Elements_In[run_index + i];
                 
-                Valid_Out <= Valid_In;
+                if (run_index == input_dim - output_dim) begin
+                    run_index <= 0;
+                    Valid_Out <= 1'b1;
+                end
                 
-                if (Valid_In) begin
-                
-                    if (run_index == input_dim - output_dim)
-                        run_index <= 0;
-                    
-                    else
-                        run_index <= run_index + output_dim;
-                    
+                else begin
+                    run_index <= run_index + output_dim;
+                    Valid_Out <= 1'b0;
                 end
                 
             end
             
         end
-    
+        
     end
     
     // output_dim > input_dim 
@@ -92,7 +91,7 @@ module BRAM_I_O
                 reg_Valid_In <= 1'b0;
             end
             
-            else if (Enable) begin
+            else begin
                 
                 reg_Valid_In <= Valid_In;
                 

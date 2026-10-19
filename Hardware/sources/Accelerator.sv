@@ -31,7 +31,7 @@ module Accelerator
     );
     
     statetype mode_CU, mode_reg_1, mode_reg_2;
-    wire Element_l_CU, Element_l_reg_1;
+    wire Element_l_CU;
     wire [address_size : 0] tile_A, tile_B, tile_num_in;
     wire [address_size+array_dim : 0] input_dim_in;
     wire last_AG, last_OB, acc_ready_in;
@@ -39,7 +39,7 @@ module Accelerator
     wire WE_IBram_in, WE_OBram_in;
     wire Enable_IBram_in, Enable_OBram_in;
     wire enable_IBram_reg, enable_OBram_reg;
-    wire Valid_I_O_In, Valid_I_O_O_In, valid_I_O_O_In_reg_1;
+    wire Valid_I_O_In, Valid_I_O_O_In, valid_I_O_O_In_reg_1, valid_I_O_O_In_reg_2;
     wire [array_dim-1 : 0][input_datalength-1 : 0] Element_IBram_I_O_In;
     wire [1 : 0][array_dim-1 : 0][input_datalength-1 : 0] Element_IBram;
     wire [array_dim-1 : 0][input_datalength-1 : 0] Element_IBuf_A, Element_IBuf_B;
@@ -84,14 +84,6 @@ module Accelerator
         //
     
     
-        // last element signal register for accelerator output
-    Register #(32'd1) element_last_reg_1(.CLK(CLK), .Reset(Reset),
-                                         .WE(1'b1),
-                                         .d(Element_l_CU),
-                                         .q(Element_l_reg_1));
-        //
-    
-    
     // Address Generator
     Address_Generator #(array_dim, address_size, elements_per_cycle) AG_component(.CLK(CLK), .Reset(Reset),
                                                                                   .Mode_In(mode_CU),
@@ -99,7 +91,8 @@ module Accelerator
                                                                                   .Element_Valid_In(Element_Valid_In),
                                                                                   .Tile_A(tile_A), .Tile_B(tile_B),
                                                                                   .host_ready(host_ready),
-                                                                                  .element_last(last_AG),
+                                                                                  .element_last(Valid_I_O_Out),
+                                                                                  .change_mode(last_AG),
                                                                                   .Address(address_AG),
                                                                                   .WE_IBram(WE_IBram_in), 
                                                                                   .WE_OBram(WE_OBram_in),
@@ -122,7 +115,6 @@ module Accelerator
         // Input Bunching
     BRAM_I_O #(input_datalength, elements_per_cycle, array_dim) BRAM_I_O_In(.CLK(CLK), .Reset(Reset),
                                                                             .Elements_In(Element_In),
-                                                                            .Enable(1'b1),
                                                                             .Valid_In(WE_IBram_in),
                                                                             .Elements_Out(Element_IBram_I_O_In),
                                                                             .Valid_Out(Valid_I_O_In));
@@ -216,11 +208,15 @@ module Accelerator
                                        .q(valid_I_O_O_In_reg_1));
         //
         
+    Register #(32'd1) Valid_I_O_O_In_reg_2(.CLK(CLK), .Reset(Reset),
+                                       .WE(1'b1),
+                                       .d(valid_I_O_O_In_reg_1),
+                                       .q(valid_I_O_O_In_reg_2));
+        
     
         // Output de-bunching
     BRAM_I_O #(output_datalength, array_dim, 32'd1) BRAM_I_O_O(.CLK(CLK), .Reset(Reset),
                                                                .Elements_In(res_OBram),
-                                                               .Enable(1'b1),
                                                                .Valid_In(valid_I_O_O_In_reg_1 && host_ready),
                                                                .Elements_Out(res_OBram_I_O),
                                                                .Valid_Out(Valid_I_O_Out));
@@ -230,8 +226,8 @@ module Accelerator
    
    // Accelerator output signals                                                           
    assign Element_Out = res_OBram_I_O;
-   assign Element_Valid_Out = valid_I_O_O_In_reg_1;
-   assign Element_Out_last = Element_l_reg_1 && host_ready; 
+   assign Element_Valid_Out = valid_I_O_O_In_reg_2 && Valid_I_O_O_In;
+   assign Element_Out_last = Element_l_CU; 
    assign acc_ready = acc_ready_in;
    //
    

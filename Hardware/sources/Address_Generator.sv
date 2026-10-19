@@ -28,8 +28,8 @@ module Address_Generator
      input logic unsigned [address_size+array_dim : 0] input_dim,
      input logic Element_Valid_In,
      input logic unsigned [address_size : 0] Tile_A, Tile_B,
-     input logic host_ready,
-     output logic element_last,
+     input logic host_ready, element_last,
+     output logic change_mode,
      output logic [1 : 0][address_size-1 : 0] Address,
      output logic WE_IBram, WE_OBram,
      output logic Enable_IBram, Enable_OBram, Valid_OBram_I_O,
@@ -68,6 +68,8 @@ module Address_Generator
                     BRAM_I_counter <= elements_per_cycle;
                     no_rows <= 0;
                     run_index_output <= 0;
+                    run_row_index <= 0;
+                    run_column_index <= 0;
                 end
                 
                 Collect_Inputs: begin
@@ -162,12 +164,10 @@ module Address_Generator
 
                         if (run_column_index == input_dim - 1) begin
                             
-                            run_column_index <= 0;
-                            
-                            if (run_row_index == (no_rows << ($clog2(elements_per_cycle) - 1)) - 1)
-                                run_row_index <= 0;
-                            else
+                            if (run_row_index != (no_rows << ($clog2(elements_per_cycle) - 1)) - 1) begin
                                 run_row_index <= run_row_index + 1;
+                                run_column_index <= 0;
+                            end
                             
                         end
                         
@@ -218,7 +218,7 @@ module Address_Generator
         Enable_OBram = 1'b0;
         Valid_OBram_I_O = 1'b0;
         
-        element_last = 1'b0;
+        change_mode = 1'b0;
         
         case (Mode_In)
             
@@ -234,7 +234,7 @@ module Address_Generator
             Feed_Inputs: begin
                 
                 if (run_column_index == input_dim)
-                    element_last = 1'b1;
+                    change_mode = 1'b1;
                 
                 Enable_IBram = 1'b1;
                 
@@ -243,7 +243,7 @@ module Address_Generator
             Collect_Outputs: begin
                 
                 if (run_row_index == array_dim)
-                    element_last = 1'b1;
+                    change_mode = 1'b1;
                     
                 WE_OBram = 1'b1;
                 Enable_OBram = 1'b1;
@@ -253,7 +253,7 @@ module Address_Generator
             Feed_Outputs: begin
             
                 if (run_row_index == array_dim-1)
-                    element_last = 1'b1;
+                    change_mode = 1'b1;
                     
                 Enable_OBram = 1'b1;
                 
@@ -261,9 +261,9 @@ module Address_Generator
             
             Output_Results: begin
             
-                if (run_row_index == (no_rows << ($clog2(elements_per_cycle) - 1)) - 1 && run_column_index == input_dim - 1 && host_ready)
-                    element_last = 1'b1;
-                
+                if (run_row_index == (no_rows << ($clog2(elements_per_cycle) - 1)) - 1 && run_column_index == input_dim - 1 && host_ready && element_last)
+                    change_mode = 1'b1;
+                    
                 Enable_OBram = 1'b1;
                 Valid_OBram_I_O = 1'b1;
             
