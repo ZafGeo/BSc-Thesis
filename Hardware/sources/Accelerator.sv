@@ -50,7 +50,7 @@ module Accelerator
     wire [array_dim-1 : 0][output_datalength-1 : 0] res_OBram;
     wire [output_datalength-1 : 0] res_OBram_I_O;
     wire Valid_I_O_Out;
-    logic host_ready_flag_1, host_ready_flag_2;
+    logic host_ready_flag_1, host_ready_flag_2, host_ready_flag_3;
     
     localparam elements_per_cycle = data_width / input_datalength;
     
@@ -91,7 +91,7 @@ module Accelerator
                                                                                   .input_dim(input_dim_in),
                                                                                   .Element_Valid_In(Element_Valid_In),
                                                                                   .Tile_A(tile_A), .Tile_B(tile_B),
-                                                                                  .host_ready(host_ready),
+                                                                                  .host_ready(host_ready || host_ready_flag_2 || host_ready_flag_3),
                                                                                   .element_last(Valid_I_O_Out),
                                                                                   .change_mode(last_AG),
                                                                                   .Address(address_AG),
@@ -225,13 +225,18 @@ module Accelerator
    //                                                             
 
     
-   // Control logic for when host is not ready at the start of a trnasfer
+   // Control logic for when host is not ready at the start of a transfer
    always_ff@(posedge CLK)
-       if (mode_CU == Idle)
+       if (mode_CU == Idle) begin
            host_ready_flag_1 <= 1'b0;
-       else
-           if (host_ready_flag_2)
+           host_ready_flag_3 <= 1'b0;
+       end
+       else begin
+           if (host_ready_flag_2 || host_ready)
                host_ready_flag_1 <= 1'b1;
+           
+           host_ready_flag_3 <= host_ready_flag_2;
+       end
 
    always_comb
        if (valid_I_O_O_In_reg_1 && !host_ready && !host_ready_flag_1)
