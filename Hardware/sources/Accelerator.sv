@@ -50,6 +50,7 @@ module Accelerator
     wire [array_dim-1 : 0][output_datalength-1 : 0] res_OBram;
     wire [output_datalength-1 : 0] res_OBram_I_O;
     wire Valid_I_O_Out;
+    logic host_ready_flag_1, host_ready_flag_2;
     
     localparam elements_per_cycle = data_width / input_datalength;
     
@@ -217,12 +218,28 @@ module Accelerator
         // Output de-bunching
     BRAM_I_O #(output_datalength, array_dim, 32'd1) BRAM_I_O_O(.CLK(CLK), .Reset(Reset),
                                                                .Elements_In(res_OBram),
-                                                               .Valid_In(valid_I_O_O_In_reg_1 && host_ready),
+                                                               .Valid_In((valid_I_O_O_In_reg_1 && host_ready) || host_ready_flag_2),
                                                                .Elements_Out(res_OBram_I_O),
                                                                .Valid_Out(Valid_I_O_Out));
         //
    //                                                             
-   
+
+    
+   // Control logic for when host is not ready at the start of a trnasfer
+   always_ff@(posedge CLK)
+       if (mode_CU == Idle)
+           host_ready_flag_1 <= 1'b0;
+       else
+           if (host_ready_flag_2)
+               host_ready_flag_1 <= 1'b1;
+
+   always_comb
+       if (valid_I_O_O_In_reg_1 && !host_ready && !host_ready_flag_1)
+           host_ready_flag_2 <= 1'b1;
+       else
+           host_ready_flag_2 <= 1'b0;
+   //
+    
    
    // Accelerator output signals                                                           
    assign Element_Out = res_OBram_I_O;
